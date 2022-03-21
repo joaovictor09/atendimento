@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ListAllClientsByUserIdService } from '../services/listAllClientsByUserIdService';
+import { ListAllClientsByUserIdService } from '../services/ListAllClientsByUserIdService';
 
 export class ListAllClientsByUserIdController {
   async handle(request: Request, response: Response) {

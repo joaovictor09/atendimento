@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import moment from 'moment';
+import { ChangeAttendanceType } from './ChangeAttendanceType';
 
 export class UpdateAttendanceService {
   async execute(id: string) {
 
+    const changeAttendanceType = new ChangeAttendanceType
     const prismaClient = new PrismaClient();
 
     const clientExist = await prismaClient.client.findUnique({ where: { id } })
@@ -18,24 +19,38 @@ export class UpdateAttendanceService {
       }
     })
 
-    var newAttendanceType = undefined
-
-    if (attendance?.attendance == true){
-      newAttendanceType = false
-    } else {
-      newAttendanceType = true
-    }
-
-    const newAttendance = await prismaClient.attendance.update({
-      data: {
-        attendance: newAttendanceType,
-        last_attendance: moment().format()
-      },
+    const user = await prismaClient.client.findUnique({
       where: {
-        id: attendance?.id
+        id
+      },
+      include: {
+        user: {
+          select: {
+            id: true
+          }
+        }
       }
     })
 
-    return newAttendance
+    const newAttendanceType = !attendance?.attendance
+    const attendanceId = attendance?.id as string;
+    await changeAttendanceType.withData(attendanceId, newAttendanceType)
+
+    return (
+      await prismaClient.client.findMany({
+        where: {
+          user_id: user?.user_id
+        },
+        include: {
+          Attendance: {
+            select: {
+              id: true,
+              last_attendance: true,
+              attendance: true
+            }
+          }
+        }
+      })
+    )
   }
 }
